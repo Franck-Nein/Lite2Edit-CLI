@@ -1,6 +1,5 @@
 package goldendelicios.lite2editcli;
 
-import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -33,29 +32,29 @@ public class Converter {
 		Tag litematica = CompoundTag.read(inStream).get("");
 		inStream.close();
 		int dataVersion = litematica.get("MinecraftDataVersion").intValue();
-		
+
 		List<File> files = new ArrayList<>();
 		CompoundTag regions = litematica.get("Regions").asCompound();
 		for (NamedTag regionTag : regions) {
 			CompoundTag region = regionTag.asCompound();
 			ListTag palette = region.get("BlockStatePalette").asList();
 			int bitsPerBlock = Math.max(2, Integer.SIZE - Integer.numberOfLeadingZeros(palette.size() - 1));
-			
+
 			// Litematica dimensions can be negative.
 			Tag size = region.get("Size");
 			int x = size.get("x").intValue();
 			int y = size.get("y").intValue();
 			int z = size.get("z").intValue();
-			
+
 			// get offset
 			Tag position = region.get("Position");
 			int offsetx = position.get("x").intValue() + (x < 0 ? x+1 : 0);
 			int offsety = position.get("y").intValue() + (y < 0 ? y+1 : 0);
 			int offsetz = position.get("z").intValue() + (z < 0 ? z+1 : 0);
-			
+
 			// convert blocks
 			// use a temporary file to avoid OutOfMemoryErrors for large schematics
-			BufferedWriter writer = Files.newBufferedWriter(tempFile.toPath());
+			FileOutputStream outStream = new FileOutputStream(tempFile);
 			int numBlocks = Math.abs(x * y * z);
 			long bitmask, bits = 0;
 			int i = 0, bitCount = 0, weSize = 0;
@@ -67,7 +66,7 @@ public class Converter {
 					bits = bits | newBits;
 					num = num >>> (bitsPerBlock - bitCount);
 					remainingBits -= bitsPerBlock;
-					weSize += writeBlock(writer, (short) bits);
+					weSize += writeBlock(outStream, (short) bits);
 					i++;
 				}
 				
@@ -78,14 +77,14 @@ public class Converter {
 					remainingBits -= bitsPerBlock;
 					if (i >= numBlocks)
 						break;
-					weSize += writeBlock(writer, (short) bits);
+					weSize += writeBlock(outStream, (short) bits);
 					i++;
 				}
 				bits = num;
 				bitCount = remainingBits;
 			}
-			writer.close();
-			
+			outStream.close();
+
 			i = 0;
 			String[] blockPalette = new String[palette.size()];
 			for (SpecificTag blockState : palette) {
@@ -183,9 +182,9 @@ public class Converter {
 			// make sure directory exists, and write to the provided path
 			Files.createDirectories(outputDir.toPath());
 			File outputFile = new File(outputDir + "/" + outputFileName);
-			DataOutputStream outStream = new DataOutputStream(new GZIPOutputStream(new FileOutputStream(outputFile)));
-			worldEditRoot.write(outStream);
-			outStream.close();
+			DataOutputStream outStream2 = new DataOutputStream(new GZIPOutputStream(new FileOutputStream(outputFile)));
+			worldEditRoot.write(outStream2);
+			outStream2.close();
 			files.add(outputFile);
 		}
 		
@@ -193,7 +192,7 @@ public class Converter {
 		return files;
 	}
 	
-	private static int writeBlock(BufferedWriter writer, short block) throws IOException {
+	private static int writeBlock(FileOutputStream writer, short block) throws IOException {
 		int b = block >>> 7;
 		if (b == 0) {
 			writer.write(block);
