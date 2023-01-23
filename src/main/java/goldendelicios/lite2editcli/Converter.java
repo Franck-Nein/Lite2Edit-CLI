@@ -1,4 +1,4 @@
-package goldendelicios.lite2edit;
+package goldendelicios.lite2editcli;
 
 import java.io.BufferedWriter;
 import java.io.DataInputStream;
