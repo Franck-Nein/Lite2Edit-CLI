@@ -4,7 +4,7 @@
 
   <groupId>Lite2EditCli</groupId>
   <artifactId>Lite2EditCli</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>v1.1.1c1.0.1</version>
   <build>
     <plugins>
       <plugin>

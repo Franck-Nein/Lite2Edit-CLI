@@ -36,12 +36,22 @@ public class Lite2EditCli {
 		for (String inputFile : inputFiles) {
 			File input = new File(inputFile);
 			File output = new File(outputDir);
-			try {
-				List<File> outputs = Converter.litematicToWorldEdit(input, output);
-				System.out.println("Converted " + input.getName() + " to WorldEdit format and saved to " + outputDir);
-			} catch (IOException e) {
-				System.out.println("An error occurred while converting " + input.getName() + ": " + e.getMessage());
+			if(input.isDirectory()){
+				File[] filesInDirectory = input.listFiles();
+				for(File f : filesInDirectory){
+					convertFile(f, output);
+				}
+			}else{
+				convertFile(input, output);
 			}
+		}
+	}
+	private static void convertFile(File input, File output) {
+		try {
+			Converter.litematicToWorldEdit(input, output);
+			System.out.println("Converted " + input.getName() + " to WorldEdit format and saved to " + output);
+		} catch (IOException e) {
+			System.out.println("An error occurred while converting " + input.getName() + ": " + e.getMessage());
 		}
 	}
 }
